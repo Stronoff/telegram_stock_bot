@@ -21,6 +21,8 @@ class AuthMiddleware(BaseMiddleware):
         event: Message,
         data: dict[str, Any],
     ) -> Any:
+        logger.info("AuthMiddleware called")
+
         if not isinstance(event, Message):
             return await handler(event, data)
 

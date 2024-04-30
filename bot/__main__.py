@@ -3,13 +3,12 @@ import asyncio
 
 import sentry_sdk
 import uvloop
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.schedulers.background import BackgroundScheduler
+from aiogram import Bot
 from loguru import logger
 from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
 from bot.core.config import settings
-from bot.core.loader import app, bot, dp
+from bot.core.loader import app, bot, dp, scheduler
 from bot.handlers import get_handlers_router
 from bot.handlers.metrics import MetricsView
 from bot.keyboards.default_commands import remove_default_commands, set_default_commands
@@ -24,8 +23,9 @@ if settings.USE_WEBHOOK:
 async def on_startup() -> None:
     logger.info("bot starting...")
 
-    dp.include_router(get_handlers_router())
     register_middlewares(dp)
+
+    dp.include_router(get_handlers_router())
 
     if settings.USE_WEBHOOK:
         app.middlewares.append(prometheus_middleware_factory())
@@ -102,7 +102,6 @@ async def main() -> None:
             profiles_sample_rate=1.0,
             integrations=[sentry_loguru],
         )
-    scheduler = AsyncIOScheduler()
 
     logger.add(
         "logs/telegram_bot.log",
@@ -112,14 +111,13 @@ async def main() -> None:
         compression="zip",
     )
 
-    # register_middlewares(dp, scheduler)
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
-    # scheduler.start()
 
     if settings.USE_WEBHOOK:
         await setup_webhook()
     else:
+        scheduler.start()
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 

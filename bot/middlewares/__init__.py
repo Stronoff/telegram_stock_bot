@@ -1,11 +1,11 @@
 from aiogram import Dispatcher
 from aiogram.utils.callback_answer import CallbackAnswerMiddleware
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
 
 from bot.core.loader import i18n as _i18n
 
 
-def register_middlewares(dp: Dispatcher, scheduler: AsyncIOScheduler) -> None:
+def register_middlewares(dp: Dispatcher) -> None:
     from .auth import AuthMiddleware
     from .database import DatabaseMiddleware
     from .i18n import ACLMiddleware
@@ -19,7 +19,7 @@ def register_middlewares(dp: Dispatcher, scheduler: AsyncIOScheduler) -> None:
 
     dp.update.outer_middleware(DatabaseMiddleware())
 
-    dp.update.outer_middleware(SchedulerMiddleware(scheduler))
+    dp.update.outer_middleware(SchedulerMiddleware())
 
     dp.message.middleware(AuthMiddleware())
 
