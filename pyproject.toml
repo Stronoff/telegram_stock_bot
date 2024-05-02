@@ -15,6 +15,7 @@ pydantic = "^2.3.0"
 pydantic-settings = "^2.0.3"
 tinkoff-investments = "^0.2.0b97"
 apscheduler = "^3.10.4"
+apscheduler-di = "^0.1.0"
 
 [tool.poetry.group.bot.dependencies]
 aiogram = "^3.3.0"

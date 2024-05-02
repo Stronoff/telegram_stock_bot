@@ -3,7 +3,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import DefaultKeyBuilder, RedisStorage
 from aiogram.utils.i18n.core import I18n
 from aiohttp import web
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from bot.scheduler.scheduler import setup_scheduler
 from redis.asyncio import ConnectionPool, Redis
 
 from bot.core.config import I18N_DOMAIN, LOCALES_DIR, settings
@@ -30,7 +30,7 @@ storage = RedisStorage(
 
 dp = Dispatcher(storage=storage)
 
-scheduler = AsyncIOScheduler()
+scheduler = setup_scheduler(bot=bot, settings=settings, storage=RedisStorage)
 
 i18n: I18n = I18n(path=LOCALES_DIR, default_locale="en", domain=I18N_DOMAIN)
 
