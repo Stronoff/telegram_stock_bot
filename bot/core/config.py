@@ -41,6 +41,12 @@ class BotSettings(WebhookSettings):
     RATE_LIMIT: int | float = 0.5  # for throttling control
 
 
+class NewsSettings(EnvBaseSettings):
+    NEWS_LINK: str = "https://smart-lab.ru/news/rss"
+    MAX_RESULTS_NEWS: int | float = 10
+    DATA_FILE_NEWS: str = "/data/news_ids"
+
+
 class DBSettings(EnvBaseSettings):
     DB_HOST: str = "postgres"
     DB_PORT: int = 5432
@@ -78,11 +84,10 @@ class CacheSettings(EnvBaseSettings):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
 
 
-class Settings(BotSettings, DBSettings, CacheSettings):
+class Settings(BotSettings, DBSettings, CacheSettings, NewsSettings):
     DEBUG: bool = False
 
     SENTRY_DSN: str | None = None
-
 
 
 settings = Settings()

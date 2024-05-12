@@ -7,6 +7,9 @@ ENV POETRY_NO_INTERACTION=1 \
     POETRY_CACHE_DIR="/tmp/poetry_cache" \
     POETRY_VERSION=1.7.0
 
+RUN mkdir /data
+RUN touch /data/news_ids
+
 WORKDIR /usr/src/app
 
 COPY . .

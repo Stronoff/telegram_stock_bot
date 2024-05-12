@@ -1,12 +1,10 @@
-from aiogram import Router, types, F, Bot
+from aiogram import Router, types, F
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.handlers.stock_diff_info import send_share_diff
-from bot.core.loader import bot
 from bot.services.users import get_user_token
-from bot.services.scheduled_jobs import add_job
 
 
 router = Router(name="scheduler_manager")

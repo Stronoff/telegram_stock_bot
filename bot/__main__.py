@@ -1,9 +1,9 @@
 from __future__ import annotations
+
 import asyncio
 
 import sentry_sdk
 import uvloop
-from aiogram import Bot
 from loguru import logger
 from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
@@ -14,6 +14,7 @@ from bot.handlers.metrics import MetricsView
 from bot.keyboards.default_commands import remove_default_commands, set_default_commands
 from bot.middlewares import register_middlewares
 from bot.middlewares.prometheus import prometheus_middleware_factory
+from bot.scheduler.jobs.news_notification import send_news
 
 if settings.USE_WEBHOOK:
     from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
@@ -117,6 +118,7 @@ async def main() -> None:
     if settings.USE_WEBHOOK:
         await setup_webhook()
     else:
+        scheduler.add_job(send_news, 'interval', seconds=10, kwargs={"user_id": 446028782})
         scheduler.start()
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 

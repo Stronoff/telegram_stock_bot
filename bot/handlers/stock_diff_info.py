@@ -24,7 +24,7 @@ async def share_diff_handler(message: types.Message, session: AsyncSession) -> N
 async def send_share_diff(bot: Bot, user_id, token, ticker, interval, limit):
     delta, cnt = await get_share_diff(token, ticker, interval)
     if cnt == -2:
-        await bot.send_message(user_id, f"{delta}; {cnt}")
+        pass
 
     logger.info(f"Sending share_diff to user {user_id}, {delta}, {cnt}")
     if abs(delta) >= limit:
