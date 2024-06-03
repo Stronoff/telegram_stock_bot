@@ -19,12 +19,17 @@ def stock_list_choose_acc(accounts: List[Dict]) -> InlineKeyboardMarkup:
     return keyboard.as_markup()
 
 
-def buy_sell_kb(instruments_list: List[InstrumentShort]) -> InlineKeyboardMarkup:
+def buy_sell_kb(instruments_list: List[InstrumentShort], delta: List[float]) -> InlineKeyboardMarkup:
     buttons = [
-        [InlineKeyboardButton(text=f"Buy {instrument.ticker}", callback_data=f"buy__X__{instrument.uid}"),
-         InlineKeyboardButton(text=f"Sell {instrument.ticker}", callback_data=f"sell__X__{instrument.uid}")]
-        for instrument in instruments_list]
+        [
+            InlineKeyboardButton(text=f"{instrument.name}: {'⬆️' if delta>0 else '⬇️'} {delta}%",
+                                 url=f"https://www.tinkoff.ru/invest/stocks/{instrument.ticker}/"),
+            InlineKeyboardButton(text=f"Buy {instrument.ticker}", callback_data=f"buy__X__{instrument.uid}"),
+            InlineKeyboardButton(text=f"Sell {instrument.ticker}", callback_data=f"sell__X__{instrument.uid}")
+        ]
+        for delta, instrument in zip(delta, instruments_list)]
 
     keyboard = InlineKeyboardBuilder(markup=buttons)
+    keyboard.adjust(1, 2, repeat=True)
 
     return keyboard.as_markup()

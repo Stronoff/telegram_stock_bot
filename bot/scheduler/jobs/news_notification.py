@@ -49,17 +49,24 @@ async def send_news(bot: Bot, user_id: int, token: int):
             else:
                 ticker_str = " #".join([x.ticker for x in instruments_list])
                 name_str = " #".join([x.name for x in instruments_list])
-                market_data: List[List[Trade]] = [x.trades for x in
-                                                  await client.market_data.get_last_trades(instrument_id=a.uid)
-                                                  for a in instruments_list]
-                now = datetime.now(TZ)
-                prices_prev_min = [[x.price for x in trade] for trade in market_data if
-                                   now - timedelta(minutes=1) < x.time < now - timedelta(seconds=30)]
-                prices_now = [[x.price for x in trade ]for trade in market_data if
-                              now - timedelta(seconds=30) <= x.time]
-                avg_prev = [sum(x)/len(x) for x in prices_prev_min]
-                avg_new = [sum(x)/len(x) for x in prices_now]
-                delta = [round((b-a)/b*100, 2) for a, b in zip(avg_prev, avg_new)]
+                market_data = [await client.market_data.get_last_trades(instrument_id=a.uid) for a in instruments_list]
+                market_data: List[List[Trade]] = [x.trades for x in market_data]
+                if len(market_data) > 0:
+                    now = datetime.now(TZ)
+                    prices_prev_min = [[x.price for x in trades if now - timedelta(minutes=1) < x.time < now - timedelta(seconds=30)]
+                                       for trades in market_data]
+                    prices_now = [[x.price for x in trade if now - timedelta(seconds=30) <= x.time]
+                                  for trade in market_data]
+                    delta = []
+                    for price_prev, price_now in zip(prices_prev_min, prices_now):
+                        if price_prev and price_now:
+                            avg_prev = sum(price_prev)/len(price_prev)
+                            avg_new = sum(price_now)/len(price_now)
+                            delta.append(round((avg_new-avg_prev)/avg_prev*100, 2))
+                        else:
+                            delta.append(0)
+                else:
+                    delta = [0] * len(instruments_list)
                 e = time.time()
                 await bot.send_message(user_id,
                                        f"#{ticker_str} \n"
@@ -71,4 +78,4 @@ async def send_news(bot: Bot, user_id: int, token: int):
                                        f"Link: {x['link']}\n"
                                        f"ML Score: In work :(\n"
                                        f"Time elapsed: {e - s}",
-                                       reply_markup=buy_sell_kb(instruments_list))
+                                       reply_markup=buy_sell_kb(instruments_list, delta))
