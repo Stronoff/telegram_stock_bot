@@ -4,15 +4,15 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.handlers.stock_diff_info import send_share_diff
+from bot.scheduler.jobs.news_notification import send_news
 from bot.services.users import get_user_token
-
 
 router = Router(name="scheduler_manager")
 
 
 @router.message(F.text.startswith("/get_schedules"))
 async def get_schedules(message: types.Message, scheduler: AsyncIOScheduler):
-    jobs = [' '.join(x.name.split('_')[1:]) for x in scheduler.get_jobs()]
+    jobs = [job.id for job in scheduler.get_jobs()]
     logger.info(f'{jobs}')
     text = "\n".join(jobs) if len(jobs) > 0 else "No jobs registered"
     await message.answer(f"{text}")
@@ -40,15 +40,40 @@ async def register_scheduler_handler(message: types.Message, session: AsyncSessi
     token = await get_user_token(session, message.from_user.id)
     _, ticker, interval, limit = message.text.split(' ')
     user_id = int(message.from_user.id)
-    job = scheduler.add_job(send_share_diff, 'interval', seconds=int(interval),
-                            kwargs={
-                                'user_id': user_id,
-                                'ticker': ticker,
-                                'token': token,
-                                'interval': int(interval),
-                                'limit': int(limit)
-                            },
-                            name=f'{user_id}_{ticker}_{interval}_{limit}')
+    _ = scheduler.add_job(send_share_diff, 'interval', seconds=int(interval),
+                          kwargs={
+                              'user_id': user_id,
+                              'ticker': ticker,
+                              'token': token,
+                              'interval': int(interval),
+                              'limit': int(limit)
+                          },
+                          name=f'{user_id}_{ticker}_{interval}_{limit}')
 
 
-    # await add_job(session, message.from_user.id, job.id)
+@router.message(F.text.startswith("/news_scheduler"))
+async def news_scheduler_handler(message: types.Message, scheduler: AsyncIOScheduler, session: AsyncSession) -> None:
+    user_id = message.from_user.id
+
+    if scheduler.get_job(f'news_scheduler_{user_id}'):
+        logger.info(f"{scheduler.get_job(f'news_scheduler_{user_id}')}")
+        await message.answer("Scheduler already running! If you want to stop run /stop_news")
+        return
+
+    token = await get_user_token(session, message.from_user.id)
+    scheduler.add_job(send_news,
+                      trigger='interval',
+                      seconds=10,
+                      id=f'news_scheduler_{user_id}',
+                      kwargs={'user_id': user_id,
+                              'token': token})
+    await message.answer("New news scheduled successfully added!")
+
+
+@router.message(F.text.startswith("/stop_news"))
+async def news_scheduler_remove(message: types.Message, scheduler: AsyncIOScheduler) -> None:
+    if scheduler.get_job(f'news_scheduler_{message.from_user.id}'):
+        scheduler.remove_job(f'news_scheduler_{message.from_user.id}')
+        await message.answer("News scheduler removed")
+    else:
+        await message.answer("News scheduler not registered! If you want to create run `/news_scheduler`")

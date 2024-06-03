@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
+import loguru
 from sqlalchemy import func, select, update
 
 from bot.cache.redis import build_key, cached, clear_cache

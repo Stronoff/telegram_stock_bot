@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 from zoneinfo import ZoneInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -88,6 +88,7 @@ class Settings(BotSettings, DBSettings, CacheSettings, NewsSettings):
     DEBUG: bool = False
 
     SENTRY_DSN: str | None = None
+    # TICKERS_WHITELIST: List | str = 'any'
 
 
 settings = Settings()

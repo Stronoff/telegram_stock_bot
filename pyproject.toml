@@ -18,6 +18,8 @@ apscheduler = "^3.10.4"
 apscheduler-di = "^0.1.0"
 feedparser = "^6.0.11"
 lxml = "^5.2.1"
+g4f = {extras = ["all"], version = "^0.3.1.0"}
+nodriver = "^0.29rc2"
 
 [tool.poetry.group.bot.dependencies]
 aiogram = "^3.3.0"

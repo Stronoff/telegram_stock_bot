@@ -1,3 +1,5 @@
+import os
+
 import feedparser
 from aiohttp import ClientSession
 from loguru import logger
@@ -13,12 +15,17 @@ async def get_news(url: str, max_results: int) -> list:
 
 
 async def get_last_news(url: str, max_results: int, data_path: str):
-    with open(data_path, 'r') as f:
-        last_ids = set(f.read().splitlines())
+    if os.path.exists(data_path):
+        with open(data_path, 'r') as f:
+            last_ids = set(f.read().splitlines())
+    else:
+        last_ids = set()
+
+    logger.info(f"Last ids: {last_ids}")
     try:
         news = await get_news(url, max_results)
         news_ids = {x['id'] for x in news}
-
+        logger.info(f"Updated ids: {news_ids}")
         if last_ids == news_ids:
             return None
 
@@ -26,7 +33,9 @@ async def get_last_news(url: str, max_results: int, data_path: str):
             for n_id in news_ids:
                 f.write(f'{n_id}\n')
 
-        updated_news = news_ids ^ last_ids
+        updated_news = news_ids - last_ids
+        logger.info(f"After filter ids: {news_ids}")
+
         news_data = await get_news_data(updated_news)
 
         return news_data
@@ -46,10 +55,18 @@ async def get_news_data(links: set):
                 try:
                     output.append({
                         'title': tree.xpath('//*[@id="content"]/div[1]/h1/span/text()')[0],
-                        'content': tree.xpath('//*[@id="content"]/div[1]/div[1]/text()')[0],
-                        'tags': tree.xpath('//*[@id="content"]/div[1]/ul[3]/li[2]/a/text()')[0]})
+                        'content': tree.xpath('//*[@id="content"]/div[1]//div[@class="content"]//text()'),
+                        'tags': tree.xpath('//*[@id="content"]/div[1]/ul[@class="forum_tags"]//li/a/text()'),
+                        'link': link,
+                    })
                 except Exception as e:
                     logger.info(e)
                     logger.info(f"ERROR PARSING: {link}; TREE: {tree}")
+                    output.append({
+                        'title': None,
+                        'content': None,
+                        'tags': None,
+                        'link': link,
+                    })
 
     return output
