@@ -24,8 +24,8 @@ def buy_sell_kb(instruments_list: List[InstrumentShort], delta: List[float]) -> 
         [
             InlineKeyboardButton(text=f"{instrument.name}: {'⬆️' if delta>0 else '⬇️'} {delta}%",
                                  url=f"https://www.tinkoff.ru/invest/stocks/{instrument.ticker}/"),
-            InlineKeyboardButton(text=f"Buy {instrument.ticker}", callback_data=f"buy__X__{instrument.uid}"),
-            InlineKeyboardButton(text=f"Sell {instrument.ticker}", callback_data=f"sell__X__{instrument.uid}")
+            InlineKeyboardButton(text=f"Buy {instrument.ticker}", callback_data=f"stock_operation__buy__X__{instrument.uid}"),
+            InlineKeyboardButton(text=f"Sell {instrument.ticker}", callback_data=f"stock_operation__sell__X__{instrument.uid}")
         ]
         for delta, instrument in zip(delta, instruments_list)]
 

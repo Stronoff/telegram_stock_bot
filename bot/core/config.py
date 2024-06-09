@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import decimal
 from datetime import UTC
 from pathlib import Path
 from typing import TYPE_CHECKING, List
@@ -45,6 +46,14 @@ class NewsSettings(EnvBaseSettings):
     NEWS_LINK: str = "https://smart-lab.ru/news/rss"
     MAX_RESULTS_NEWS: int | float = 10
     DATA_FILE_NEWS: str = "/data/news_ids"
+    INSTRUMENTS_TAGS_MAPPING: dict = {
+        'OZON | ОЗОН': 'OZON',
+        'Сбербанк': 'Сбер Банк'
+    }
+
+
+class StockSettings(EnvBaseSettings):
+    COEFICIENT_LIMIT_ORDER: decimal.Decimal = decimal.Decimal('1.0001')
 
 
 class DBSettings(EnvBaseSettings):
@@ -84,7 +93,7 @@ class CacheSettings(EnvBaseSettings):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/0"
 
 
-class Settings(BotSettings, DBSettings, CacheSettings, NewsSettings):
+class Settings(BotSettings, DBSettings, CacheSettings, NewsSettings, StockSettings):
     DEBUG: bool = False
 
     SENTRY_DSN: str | None = None

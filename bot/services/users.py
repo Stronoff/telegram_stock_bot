@@ -141,3 +141,15 @@ async def get_user(session: AsyncSession, user_id: int) -> UserModel:
 async def get_user_token(session: AsyncSession, user_id: int) -> int:
     user: UserModel = await get_user(session, user_id)
     return str(user.tinkoff_token)
+
+
+@cached(key_builder=lambda session, user_id: build_key(user_id))
+async def get_user_account_id(session: AsyncSession, user_id: int) -> int:
+    user: UserModel = await get_user(session, user_id)
+    return str(user.account_id)
+
+
+@cached(key_builder=lambda session, user_id: build_key(user_id))
+async def get_tinkoff_id(session: AsyncSession, user_id: int) -> int:
+    user: UserModel = await get_user(session, user_id)
+    return str(user.tinkoff_token), str(user.account_id)

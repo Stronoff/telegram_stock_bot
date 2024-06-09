@@ -1,6 +1,6 @@
 import datetime
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
 from typing import List
 
 import loguru
@@ -31,6 +31,9 @@ async def send_news(bot: Bot, user_id: int, token: int):
             instruments_list: List[InstrumentShort] = []
             for tag in x['tags']:
                 loguru.logger.info(f"Searching tag {tag}")
+                if tag in settings.INSTRUMENTS_TAGS_MAPPING:
+                    tag = settings.INSTRUMENTS_TAGS_MAPPING[tag]
+
                 instruments: FindInstrumentResponse = await client.instruments.find_instrument(query=tag,
                                                                                                api_trade_available_flag=True,
                                                                                                instrument_kind=INSTRUMENT_TYPE_SHARE)
@@ -49,20 +52,25 @@ async def send_news(bot: Bot, user_id: int, token: int):
             else:
                 ticker_str = " #".join([x.ticker for x in instruments_list])
                 name_str = " #".join([x.name for x in instruments_list])
-                market_data = [await client.market_data.get_last_trades(instrument_id=a.uid) for a in instruments_list]
+                now = datetime.now(TZ)
+                market_data = [
+                    await client.market_data.get_last_trades(instrument_id=a.uid, from_=now - timedelta(minutes=5), to=now + timedelta(minutes=1))
+                    for a in instruments_list]
                 market_data: List[List[Trade]] = [x.trades for x in market_data]
                 if len(market_data) > 0:
-                    now = datetime.now(TZ)
-                    prices_prev_min = [[x.price for x in trades if now - timedelta(minutes=1) < x.time < now - timedelta(seconds=30)]
+                    prices_prev_min = [[x.price.units + x.price.nano / 1_000_000_000 for x in trades if
+                                        now - timedelta(minutes=1) < x.time < now - timedelta(seconds=30)]
                                        for trades in market_data]
-                    prices_now = [[x.price for x in trade if now - timedelta(seconds=30) <= x.time]
+                    prices_now = [[x.price.units + x.price.nano / 1_000_000_000 for x in trade if
+                                   now - timedelta(seconds=30) <= x.time]
                                   for trade in market_data]
                     delta = []
+                    loguru.logger.info(f"previous prices: {prices_prev_min}; current prices: {prices_now}")
                     for price_prev, price_now in zip(prices_prev_min, prices_now):
                         if price_prev and price_now:
-                            avg_prev = sum(price_prev)/len(price_prev)
-                            avg_new = sum(price_now)/len(price_now)
-                            delta.append(round((avg_new-avg_prev)/avg_prev*100, 2))
+                            avg_prev = sum(price_prev) / len(price_prev)
+                            avg_new = sum(price_now) / len(price_now)
+                            delta.append(round((avg_new - avg_prev) / avg_prev * 100, 2))
                         else:
                             delta.append(0)
                 else:
