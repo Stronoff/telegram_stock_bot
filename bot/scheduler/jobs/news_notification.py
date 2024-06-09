@@ -17,12 +17,10 @@ from bot.services.news_parser import get_last_news
 
 async def send_news(bot: Bot, user_id: int, token: int):
     s = time.time()
-    loguru.logger.info("Start parsing news")
     news = await get_last_news(settings.NEWS_LINK, settings.MAX_RESULTS_NEWS, settings.DATA_FILE_NEWS)
 
     if news is None:
         return
-    loguru.logger.info(f"Got {len(news)} new news")
     for x in news:
         if x['title'] is None:
             await bot.send_message(user_id, f"Error parsing page {x['link']}")

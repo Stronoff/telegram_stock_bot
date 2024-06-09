@@ -1,6 +1,5 @@
-from aiogram import Router, types, F, Bot
+from aiogram import Router, types, F
 from aiogram.types import CallbackQuery
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.services.users import get_tinkoff_id
@@ -22,11 +21,23 @@ async def buy_sell_handler(callback: CallbackQuery, session: AsyncSession) -> No
         await callback.message.answer(f"Invalid command got in callback: {callback.data}")
 
 
+@router.callback_query(F.data.startswith('get_orders'))
+async def get_orders_handler(session: AsyncSession, callback: CallbackQuery):
+    user_id = callback.from_user.id
+    token, account_id = await get_tinkoff_id(session, user_id)
+    orders = await get_orders(token, account_id)
+    orders_str = '\n'.join(orders)
+    msg_text = f"Orders received: {orders_str}"
+
+    await callback.bot.send_message(user_id, msg_text)
+
 
 @router.message(F.text.startswith("/get_orders"))
-async def get_orders_handler(message: types.Message, session: AsyncSession):
+async def get_orders_handler(session: AsyncSession, message: types.Message = None):
     user_id = message.from_user.id
     token, account_id = await get_tinkoff_id(session, user_id)
     orders = await get_orders(token, account_id)
     orders_str = '\n'.join(orders)
-    await message.answer(f"Active orders: {orders_str}")
+    msg_text = f"Orders received: {orders_str}"
+
+    await message.answer(msg_text)

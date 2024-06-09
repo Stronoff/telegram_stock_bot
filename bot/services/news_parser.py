@@ -21,11 +21,9 @@ async def get_last_news(url: str, max_results: int, data_path: str):
     else:
         last_ids = set()
 
-    logger.info(f"Last ids: {last_ids}")
     try:
         news = await get_news(url, max_results)
         news_ids = {x['id'] for x in news}
-        logger.info(f"Updated ids: {news_ids}")
         if last_ids == news_ids:
             return None
 
